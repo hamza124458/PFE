@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaflet Map with GeoServer Vector Layer (WFS)</title>
+    <!-- Reference to the Leaflet CSS file -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Define the size of the map container -->
+    <style>
+        #map {
+            width: 100vw;
+            height: 100vh;
+            float: left;
+        }
+
+        #attribute-info {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 20vw;
+            height: 100vh;
+            background-color: #f8f9fa;
+            border-left: 1px solid #ddd;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        .feature-info {
+            margin-bottom: 10px;
+        }
+
+        #coordinates {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: white;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            z-index: 1000; /* Ensure it is above other elements */
+        }
+
+        .leaflet-control-scale {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .highlighted {
+            fill: yellow; /* Highlight fill color */
+            stroke: orange; /* Highlight stroke color */
+            stroke-width: 2; /* Ensure the stroke is visible */
+        }
+    </style>
+</head>
+<body>
+    <!-- The map container -->
+    <div id="map"></div>
+
+    <!-- Coordinates display -->
+    <div id="coordinates"></div>
+
+    <!-- Reference to the Leaflet JavaScript file -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    
+
+    <script>
+        // Create a new Leaflet map instance centered on the north of Tunisia
+        var map = L.map('map').setView([37.0, 9.0], 8); // North Tunisia coordinates with zoom level 8
+
+        // Add a base layer using OpenStreetMap
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Array of layer names including Ain_Drahem_exp
+        var layerNames = [
+            "SEP:Ain_Drahem_exp",
+            "SEP:Atatfa_exp",
+            "SEP:Azib_exp",
+            "SEP:Bechateur_exp",
+            "SEP:El_Mabtouh",
+            "SEP:Etbaineya_exp",
+            "SEP:Ghazela_exp",
+            "SEP:Jbal_esme_exp",
+            "SEP:Joumine_exp",
+            "SEP:Khmeiria_exp",
+            "SEP:Kornich_exp",
+            "SEP:Maden_exp",
+            "SEP:Mateur_exp",
+            "SEP:Melloula_exp",
+            "SEP:Oued_Ezzen_exp",
+            "SEP:Oued_Sadra_exp",
+            "SEP:Ras_jbal_exp",
+            "SEP:Rimel_exp",
+            "SEP:Sehabna_exp",
+            "SEP:Sejnane_exp",
+            "SEP:Sidi_meshreg",
+            "SEP:Tabarka_exp",
+            "SEP:Teskraya_exp",
+            "SEP:Ain_Essobh_exp" // Added Ain_Essobh_exp to the layer names array
+        ];
+
+        // Create an object to hold the layers for the layer control
+        var overlayLayers = {};
+
+        // Iterate over the layer names and create WMS layers
+        layerNames.forEach(function(layerName) {
+            var layer = L.tileLayer.wms('http://localhost:8080/geoserver/SEP/wms', {
+                layers: layerName,
+                format: 'image/png',
+                transparent: true,
+                version: '1.3.0',
+                crs: L.CRS.EPSG3857
+            });
+            // Add each layer to the overlayLayers object with a human-readable name
+            overlayLayers[layerName] = layer;
+        });
+
+        // Add layer control to the map
+        L.control.layers(null, overlayLayers).addTo(map);
+
+        // Add the initial layer to the map
+        overlayLayers["SEP:Ain_Drahem_exp"].addTo(map);
+
+        // Define the custom icon using Leaflet's built-in marker icon
+        var customIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            iconSize: [25, 41], // Size of the icon
+            shadowSize: [41, 41], // Size of the shadow
+            iconAnchor: [12, 41], // Point of the icon which will correspond to marker's location
+            shadowAnchor: [12, 41], // The same for the shadow
+            popupAnchor: [1, -34] // Point from which the popup should open relative to the iconAnchor
+        });
+
+       // Coordinates and names for the markers
+var markersData = [
+    { name: "Ain drahem", coords: [36.77989, 8.69553], info: 'Name of Forest area by sector: Ain Drahem<br>Total number of permits delivered: 318<br>Most peddled forest product by permit: Firewood<br>Number of permits: 131<br>Quantity: 512 Steres<br>Most designated destination by permit: Ain Drahem' },
+    { name: "Ain Essobh", coords: [36.93648, 8.82648], info: 'Name of Forest area by sector: Ain Essobh<br>Total number of permits delivered: 25<br>Most peddled forest product by permit: Lumber<br>Number of permits: 17<br>Quantity: 224 m³<br>Most designated destination by permit: Tabarka' },
+    { name: "Atatfa", coords: [36.81950, 8.73076], info: 'Name of Forest area by sector: Atatfa<br>Total number of permits delivered: 6<br>Most peddled forest product by permit: Firewood<br>Number of permits: 3<br>Quantity: 12 Steres<br>Most designated destination by permit: Ain Drahem' },
+    { name: "Azib", coords: [37.20962, 9.97218], info: 'Name of Forest area by sector: Azib<br>Total number of permits delivered: 30<br>Most peddled forest product by permit: Firewood<br>Number of permits: 26<br>Quantity: 140 Type 3 pillars<br>Most designated destination by permit: Ras Jbal' },
+    { name: "Bechateur", coords: [37.31666, 9.71336], info: 'Name of Forest area by sector: Bechateur<br>Total number of permits delivered: 48<br>Most peddled forest product by permit: Firewood<br>Number of permits: 16<br>Quantity: 244 Stere<br>Most designated destination by permit: Mokther' },
+    { name: "El Mabtouh", coords: [37.02476, 10.01242], info: 'Name of Forest area by sector: El Mabtouh<br>Total number of permits delivered: 1<br>Most peddled forest product by permit: Pine<br>Number of permits: 1<br>Quantity: 1 Tons<br>Most designated destination by permit: Mahdia' },
+    { name: "Etbaineya", coords: [36.75075, 8.70502], info: 'Name of Forest area by sector: Etbaineya<br>Total number of permits delivered: 18<br>Most peddled forest product by permit: Firewood<br>Number of permits: 16<br>Quantity: 39 Steres<br>Most designated destination by permit: Ain Drahem' },
+    { name: "Ghazela", coords: [37.09983, 9.49497], info: 'Name of Forest area by sector: Ghazela<br>Total number of permits delivered: 37<br>Most peddled forest product by permit: Wood<br>Number of permits: 22<br>Quantity: 233 Steres<br>Most designated destination by permit: Mjez El Beb' },
+    { name: "Khmeiria", coords: [36.77795, 8.62611], info: 'Name of Forest area by sector: Khmeiria<br>Total number of permits delivered: 3<br>Most peddled forest product by permit: Wood<br>Number of permits: 3<br>Quantity: 9 Steres<br>Most designated destination by permit: Ain Drahem' },
+    { name: "Kornich", coords: [37.30642, 9.85965], info: 'Name of Forest area by sector: Kornich<br>Total number of permits delivered: 98<br>Most peddled forest product by permit: pulpwood Pin<br>Number of permits: 89<br>Quantity: 314 Steres<br>Most designated destination by permit: Sfax' },
+    { name: "Maden", coords: [37.19917, 9.37092], info: 'Name of Forest area by sector: Maden<br>Total number of permits delivered: 64<br>Most peddled forest product by permit: Coal<br>Number of permits: 64<br>Quantity: 41 Tons<br>Most designated destination by permit: Tunis' },
+    { name: "Mateur", coords: [37.03213, 9.68512], info: 'Name of Forest area by sector: Mateur<br>Total number of permits delivered: 48<br>Most peddled forest product by permit: Firewood<br>Number of permits: 16<br>Quantity: 244 Steres<br>Most designated destination by permit: Mokther' },
+    { name: "Melloula", coords: [36.93576, 8.68491], info: 'Name of Forest area by sector: Melloula<br>Total number of permits delivered: 81<br>Most peddled forest product by permit: Coal<br>Number of permits: 60<br>Quantity: 40 Tons<br>Most designated destination by permit: Sajnen' },
+    { name: "Oued Ezzen", coords: [36.82579, 8.82712], info: 'Name of Forest area by sector: Oued Ezzen<br>Total number of permits delivered: 146<br>Most peddled forest product by permit: Coal<br>Number of permits: 111<br>Quantity: 125 Tons<br>Most designated destination by permit: El Jbissa' },
+    { name: "Oued Sadra", coords: [36.85161, 8.69183], info: 'Name of Forest area by sector: Oued Sadra<br>Total number of permits delivered: 151<br>Most peddled forest product by permit: Firewood<br>Number of permits: 53<br>Quantity: 258 Steres<br>Most designated destination by permit: Ain Drahem' },
+    { name: "Ras jbal", coords: [37.23224, 10.11175], info: 'Name of Forest area by sector: Ras Jbal<br>Total number of permits delivered: 10<br>Most peddled forest product by permit: Coal<br>Number of permits: 10<br>Quantity: 2500 kg<br>Most designated destination by permit: Tunis' },
+    { name: "Rimel", coords: [37.23484, 9.97532], info: 'Name of Forest area by sector: Rimel<br>Total number of permits delivered: 71<br>Most peddled forest product by permit: Firewood<br>Number of permits: 49<br>Quantity: 222 Steres<br>Most designated destination by permit: Ras Jbel' },
+    { name: "Sehabna", coords: [37.10612, 9.14318], info: 'Name of Forest area by sector: Sehabna<br>Total number of permits delivered: 1<br>Most peddled forest product by permit: pulpwood<br>Number of permits: 1<br>Quantity: 8 Steres<br>Most designated destination by permit: Tabarka' },
+    { name: "Sejnane", coords: [37.02834, 9.23384], info: 'Name of Forest area by sector: Sejnane<br>Total number of permits delivered: 352<br>Most peddled forest product by permit: Coal<br>Number of permits: 245<br>Quantity: 246 Tons<br>Most designated destination by permit: Tunis' },
+    { name: "Sidi meshreg", coords: [37.14991, 9.16035], info: 'Name of Forest area by sector: Sidi Meshreg<br>Total number of permits delivered: 107<br>Most peddled forest product by permit: Coal<br>Number of permits: 77<br>Quantity: 67 Tons<br>Most designated destination by permit: Tunis' },
+    { name: "Tabarka", coords: [36.94053, 8.73052], info: 'Name of Forest area by sector: Tabarka<br>Total number of permits delivered: 81<br>Most peddled forest product by permit: Lumber<br>Number of permits: 30<br>Quantity: 380 m³<br>Most designated destination by permit: Nabeul' },
+    { name: "Teskraya", coords: [37.25760, 9.52880], info: 'Name of Forest area by sector: Teskraya<br>Total number of permits delivered: 1<br>Most peddled forest product by permit: Type 3 pillars<br>Number of permits: 1<br>Quantity: 1000 units<br>Most designated destination by permit: Mateur' },
+    { name: "Essemman", coords: [36.94251, 9.40512], info: 'Name of Forest area by sector: Essemman (Joumine)<br>Total number of permits delivered: 8<br>Most peddled forest product by permit:scirpus buds<br>Number of permits: 8<br>Quantity: 21 loads<br>Most designated destination by permit: Jerba' },
+    { name: "El_Ababsa", coords: [37.18001, 9.41438], info: 'Name of Forest area by sector: El Ababsa (Jbal Esme)<br>Total number of permits delivered: 64<br>Most peddled forest product by permit:  Coal <br>Number of permits: 53<br>Quantity: 29 Tons<br>Most designated destination by permit: Tunis' },
+];
+
+        // Add markers with the custom icon and corresponding names to the specified coordinates
+        markersData.forEach(function(marker) {
+            var markerInstance = L.marker(marker.coords, { icon: customIcon }).addTo(map);
+            markerInstance.bindPopup('<h3>' + marker.name + '</h3><p>' + marker.info + '</p><p>Latitude: ' + marker.coords[0] + ', Longitude: ' + marker.coords[1] + '</p>');
+        });
+
+    
+
+        // Function to handle click events on the WFS layer
+        function handleClick(event) {
+            var layer = event.layer;
+            var properties = layer.feature.properties;
+
+            // Update the attribute panel with properties
+            updateAttributePanel(properties);
+
+            // Create popup content (optional)
+            var popupContent = createPopupContent(properties);
+
+            // Create and display popup (optional)
+            L.popup()
+                .setLatLng(event.latlng)
+                .setContent(popupContent)
+                .openOn(map);
+        }
+
+        // Function to update cursor coordinates display
+        function updateCoordinates(event) {
+            document.getElementById('coordinates').innerText = 'Latitude: ' + event.latlng.lat.toFixed(5) + ', Longitude: ' + event.latlng.lng.toFixed(5);
+        }
+
+        // Event listener to update coordinates display on mousemove
+        map.on('mousemove', updateCoordinates);
+
+        // Add scale control
+        L.control.scale().addTo(map);
+    </script>
+</body>
+</html>
